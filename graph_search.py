@@ -27,56 +27,51 @@ class dfs:
         for line in data:
             if line != '\n':
                 items = line.split()
-                gr[int(items[0])-1] += [int(items[1])]
-                r_gr[int(items[1])-1] += [int(items[0])]
+                gr[int(items[0])-1] += [int(items[1])-1]
+                r_gr[int(items[1])-1] += [int(items[0])-1]
         self.g = gr
         self.g_rev = r_gr
-        
-        # initialize list of finishing times
-        self.f = [np.nan] * self.n
-
-        print(self.g_rev)
     
 
-    def dfs_search(self, g):
+    def dfs_search(self, g, leader_node):
         '''
         this function does the dfs search and update finishing times recursively
         args:
-        -g  : graph 
+        -g              : graph 
+        -leader_node    : starting node for a dfs search
         '''
+        self.stack = [leader_node]
         while self.stack:
-                    
-            print('stack initial reation')
-            print([item+1 for item in self.stack])
 
             i = self.stack[0] # first element in stack
-            # set i as explored
-            self.exp_list[i] = True
-            # set i as leader
-            self.leader_list[i] = self.s
+            del self.stack[0]
 
+            if self.exp_list[i] != 'black':
+                # add i to the stack
+                self.stack = [i] + self.stack
+                # set i as leader
+                self.leader_list[i] = leader_node + 1
 
-            # build stacks (firt in first out)
-            done = True
-            nbr_nodes = g[i]
-            for nbr_node in nbr_nodes:
-                new_node = nbr_node - 1
-                if not self.exp_list[new_node]:
-                    self.stack = [new_node] + self.stack
-                    self.exp_list[new_node] = True
-                    done = False
-                    print('stack creation')
-                    print([item+1 for item in self.stack])
+                # handle undiscovered initial node
+                if self.exp_list[i] == 'white':
+                    self.exp_list[i] = 'grey'
+                    self.t = self.t + 1
 
-            # update finishing time
-            if done:
-                self.t = self.t + 1
-                self.f[i] = self.t
-                self.order = [i] + self.order
-                print('stack elimination:')
-                print([item+1 for item in self.stack])
-                print(f't = {self.t}')
-                del self.stack[0]
+                # handle undiscovered neighbouring nodes to initial node
+                all_adj_discovered = True
+                nbr_nodes = g[i]
+                for nbr_node in nbr_nodes:
+                    # new_node = nbr_node - 1
+                    if self.exp_list[nbr_node] == 'white':
+                        self.stack = [nbr_node] + self.stack
+                        all_adj_discovered = False
+
+                # handle the case whereby all neighboring nodes were discovered
+                if all_adj_discovered:
+                    self.exp_list[i] = 'black'
+                    self.t = self.t + 1
+                    self.f[i] = self.t
+                    del self.stack[0]
  
 
     def dfs_loop(self, g, mode='sequential'):
@@ -92,31 +87,28 @@ class dfs:
         assert mode in ['sequential', 'finishing_time'], print('specify correct mode')
         
         # initialization
-        self.exp_list = [False] * self.n    
+        self.exp_list = ['white'] * self.n    
         self.leader_list = [np.nan] * self.n
         self.stack = []
         self.t = 0
         self.order = []
-        counter = 0  
+        self.f = [np.nan] * self.n
+        counter = 0
         
         if mode == 'sequential':       
             for i in reversed(range(self.n)):
                 counter = counter + 1
-                print(f'node_{i+1} was processed. {counter} of {self.n} nodes have been processed')
-                if not self.exp_list[i]:
-                    self.s = i + 1
-                    self.stack = [i]
-                    self.dfs_search(g)
+                print(f'{counter} nodes have been processedin the first pass')
+                if self.exp_list[i] == 'white': 
+                    self.dfs_search(g, i)   
 
         elif mode == 'finishing_time':
+            self.magical_order = np.argsort(-np.array(self.finishing_time))
             for node_idx in self.magical_order:
                 counter = counter + 1
-                print(f'node_{node_idx+1} was processed. its finishing value is  {self.magical_order[node_idx]}.\
-                    {counter} of {self.n} nodes have been processed')
-                if not self.exp_list[node_idx]:
-                    self.s = node_idx + 1
-                    self.stack = [node_idx]
-                    self.dfs_search(g)
+                print(f'{counter} nodes have been processedin the first pass')
+                if self.exp_list[node_idx] == 'white':
+                    self.dfs_search(g, node_idx)
     
 
     def dfs_scc(self):
@@ -128,14 +120,14 @@ class dfs:
 
         # step 1: run dfs-loop on reversed graph
         self.dfs_loop(self.g_rev)
-        self.magical_order = self.order.copy()
+        self.finishing_time = self.f.copy()
         print(f'1st pass of dfs-loop on reversed graph was successfully completed')
-        print(f'finishing values are {self.f}')
-        print(f'magical orders are {[item+1 for item in self.magical_order]}')
+        print(f'the finishing times are {self.finishing_time}')
 
         # step 2: run dfs-loop on graph
-        assert np.nan not in self.f, print('not every nodes has finishing time')
+        assert np.nan not in self.finishing_time, print('not every nodes has finishing time')
         self.dfs_loop(self.g, mode='finishing_time')
+        print(f'the magical order is {self.magical_order}')
         print(f'2nd pass of dfs-loop on the actual graph was successfully completed')
 
         # step 3: group the nodes by SCC
