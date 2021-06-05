@@ -43,6 +43,8 @@ class dfs:
         self.stack = [leader_node]
         while self.stack:
 
+            print(f'stack head is {self.stack[0]}. stack length is {len(self.stack)}. leader_node is {leader_node}')
+
             i = self.stack[0] # first element in stack
             del self.stack[0]
 
