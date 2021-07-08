@@ -35,7 +35,6 @@ class dfs:
         # initialize list of finishing times
         self.f = [np.nan] * self.n
     
-    
     def dfs_search(self, g, i):
         # set i as explored
         self.exp_list[i] = True
@@ -44,13 +43,13 @@ class dfs:
         nbr_nodes = g[i]
         for nbr_node in nbr_nodes:
             new_node = nbr_node - 1
-#             print(f'attempted new node is {new_node+1}')
+            # print(f'attempted new node is {new_node+1}')
             if not self.exp_list[new_node]:
                 self.dfs_search(g, new_node)
         # update finishing time
         self.t = self.t + 1
         self.f[i] = self.t
-#         print(f'The {i+1}th node was assigned finishing time of {self.t}')
+        # print(f'The {i+1}th node was assigned finishing time of {self.t}')
                 
     def dfs_loop(self, g, order='sequential'):
         assert order in ['sequential', 'finishing_time'], print('specify correct order')
