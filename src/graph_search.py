@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import heapq
+from tqdm import trange
 
 class dfs:
     '''
@@ -166,3 +168,79 @@ class shortest_path:
                 updated_path = [item+1 for item in path]
             B[i] = updated_path
         self.B = B
+
+
+class median_maintenence:
+    '''
+    This class stores a group of unsorted numbers in two heaps
+    and then take the median number for the first n smallest 
+    numbers.
+    '''
+    def __init__(self, filename):
+        # import txt file
+        file = open(filename, 'r')
+        data = file.readlines()
+        self.numbers = []
+        for line in data:
+            if line != '\n':
+                self.numbers.append(int(line))
+        self.n = len(self.numbers)
+
+    def heaps_rebalance(self):
+        '''
+        This function makes sure the number of elements in
+        both heaps are not different by 2 or more
+        '''
+        while (len(self.lower_heap) - len(self.upper_heap)
+        ) >= 2:
+            self.lower_heap.remove(self.lower_max)
+            heapq.heappush(self.upper_heap, self.lower_max)
+            
+        while (len(self.upper_heap) - len(self.lower_heap)
+        ) >= 2:
+            self.upper_heap.remove(self.upper_min)
+            # need to re-heapify after min is removed from root
+            heapq.heapify(self.upper_heap)
+            heapq.heappush(self.lower_heap, self.upper_min)
+
+        self.lower_max = heapq.nlargest(1, self.lower_heap)[0]
+        self.upper_min = self.upper_heap[0]
+
+    def find_median(self, n):
+        # step 1: initialize lower & upper heaps 
+        if n == 1:
+            self.median = self.numbers[0]
+            return self.median
+        else:
+            self.lower_heap = [min(self.numbers[0], self.numbers[1])]
+            self.upper_heap = [max(self.numbers[0], self.numbers[1])]
+            heapq.heapify(self.lower_heap)
+            heapq.heapify(self.upper_heap)
+            self.lower_max = heapq.nlargest(1, self.lower_heap)[0]
+            self.upper_min = self.upper_heap[0]
+
+        # step 2: iterate through the list
+        for i in range(2, n):
+            i_number = self.numbers[i]
+            if i_number <= self.lower_max:
+                heapq.heappush(self.lower_heap, i_number)
+                self.lower_max = heapq.nlargest(1, self.lower_heap)[0]
+            else:
+                heapq.heappush(self.upper_heap, i_number)
+                self.upper_min = self.upper_heap[0]
+            self.heaps_rebalance()
+        
+        # step 3: update median value
+        if len(self.lower_heap) >= len(self.upper_heap):
+            self.median = self.lower_max
+        else:
+            self.median = self.upper_min
+
+        return self.median
+    
+    def sum_median(self):
+        self.sum = 0
+        for i in trange(1, self.n+1, desc='processing..'):
+            i_median = self.find_median(i)
+            self.sum += i_median
+        return self.sum % 10000

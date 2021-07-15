@@ -11,3 +11,4 @@ First week: run "python3 kosaraju.py -f filename.txt"
 
 Second week: run "python3 dijkstra.py -f filename.txt"
 
+Third week: run "python3 median_maintenence.py -f filename.txt"
