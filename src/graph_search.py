@@ -244,3 +244,46 @@ class median_maintenence:
             i_median = self.find_median(i)
             self.sum += i_median
         return self.sum % 10000
+
+
+class two_sum:
+    '''
+    this class stores a group of numbers in dictionary (hash table), 
+    and compute the number of target values t (in the specified internal) 
+    such that there are distinct numbers x, y in the input file that 
+    satisfy x + y = t
+    '''
+    def __init__(self, filename):
+        # import txt file
+        file = open(filename, 'r')
+        data = file.readlines()
+        self.numbers = []
+        for line in data:
+            if line != '\n':
+                self.numbers.append(int(line))
+        self.n = len(self.numbers)
+    
+    def verify_target_value(self, target):
+        flag = False
+        for key in self.ht:
+            key_to_seek = target - key
+            if key_to_seek in self.ht:
+                flag = True
+                break
+        return flag
+
+    def find_target_value(self, lower_bound, upper_bound):
+        # 1.0 create dictionary
+        self.ht = dict()
+        for i in range(self.n):
+            self.ht[self.numbers[i]] = False
+        
+        # 2.0 search target values
+        target_count = 0
+        for target in trange(lower_bound, upper_bound+1, desc='searching:'):
+            flag = self.verify_target_value(target)
+            if flag:
+                target_count += 1
+        print(' ')
+        print(f'There were totally {target_count} valid target values found in the range of [{lower_bound} {upper_bound}]')
+        print(' ')
